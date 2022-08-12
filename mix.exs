@@ -26,7 +26,7 @@ defmodule NervesTestClient.MixProject do
       {:jason, "~> 1.0"},
       {:nerves_hub_link, "~> 1.2"},
       {:slipstream, "~> 1.0"},
-      {:vintage_net, "~> 0.12"}
+      {:nerves_runtime, "~> 0.7"}
     ]
   end
 end
