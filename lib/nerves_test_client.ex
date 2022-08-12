@@ -1,3 +1,2 @@
 defmodule NervesTestClient do
-
 end

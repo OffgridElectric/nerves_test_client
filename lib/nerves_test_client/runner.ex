@@ -1,66 +1,78 @@
 defmodule NervesTestClient.Runner do
-  use GenServer
+  use Slipstream
+  require Logger
 
-  alias PhoenixClient.{Socket, Channel, Message}
+  @rejoin_after 5_000
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link(config) do
+    GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
-  def init(opts) do
-    socket = opts[:socket]
-    tag = opts[:tag]
-    serial = opts[:serial]
+  @impl Slipstream
+  def init(config) do
+    opts = [
+      mint_opts: [protocols: [:http1], transport_opts: config.ssl],
+      uri: config.socket[:url],
+      rejoin_after_msec: [@rejoin_after],
+      reconnect_after_msec: config.socket[:reconnect_after_msec]
+    ]
 
-    {:ok, %{
-      tag: tag,
-      socket: socket,
-      channel: nil,
-      test_path: opts[:test_path],
-      test_results: nil,
-      test_io: nil,
-      serial: serial,
-      fw_metadata: opts[:fw_metadata]
-    }, {:continue, nil}}
+    socket =
+      new_socket()
+      |> assign(params: config.params)
+      |> connect!(opts)
+
+    {:ok, socket}
   end
 
-  def handle_continue(nil, s) do
-    {:ok, {test_io, test_results}} = ExUnitRelease.run(path: s.test_path)
-    send(self(), :connect)
-    {:noreply, %{s | test_results: test_results, test_io: test_io}}
+  @impl Slipstream
+  def handle_connect(socket) do
+    params = socket.assigns.params
+
+    socket =
+      socket
+      |> join("device:" <> params["serial"], %{
+        system: params["nerves_fw_platform"],
+        status: "ready"
+      })
+
+    {:ok, socket}
   end
 
-  # If the remote socket closes, send a message to reconnect
-  def handle_info(%Message{event: event}, s) when event in ["phx_error", "phx_close"] do
-    send(self(), :connect)
-    {:noreply, s}
+  @impl Slipstream
+  def handle_join("device:" <> _ = topic, _reply, socket) do
+    push!(socket, topic, "test_begin", [])
+    test_pid = spawn_test(socket.assigns.params["test_path"])
+    socket = assign(socket, :test_pid, test_pid)
+
+    {:ok, socket}
   end
 
-  def handle_info(:connect, s) do
-    s =
-      if Socket.connected?(s.socket) do
-        case Channel.join(s.socket, "device:" <> s.serial, join_params(s)) do
-          {:ok, _reply, channel} ->
-            # NervesWatchdog.validate()
-            %{s | channel: channel}
-
-          _error ->
-            Process.send_after(self(), :connect, 1_000)
-            s
-        end
-      else
-        Process.send_after(self(), :connect, 1_000)
-        s
-      end
-    {:noreply, s}
+  @impl Slipstream
+  def handle_info({:test_result, test_pid, {:error, reason}}, %{assigns: %{test_pid: test_pid}} = socket) do
+    Logger.error("Error running tests: #{inspect reason}")
+    {:ok, socket}
   end
 
-  defp join_params(s) do
-    %{
-      tag: s.tag,
-      fw_metadata: s.fw_metadata,
-      test_results: s.test_results,
-      test_io: s.test_io
-    }
+  def handle_info({:test_result, test_pid, {:ok, test_io, test_result}}, %{assigns: %{test_pid: test_pid}} = socket) do
+    topic = "device:" <> socket.assigns.params["serial"]
+    push!(socket, topic, "test_result", %{
+      "test_results" => test_result,
+      "test_io" => test_io
+    })
+
+    {:ok, socket}
+  end
+
+  ###
+  ### Priv
+  ###
+  defp spawn_test(path) do
+     caller = self()
+
+    spawn_link(fn ->
+      ret = ExUnitRelease.run(path: path)
+      send(caller, {:test_result, self(), ret})
+    end)
   end
 end

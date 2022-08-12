@@ -6,43 +6,37 @@ defmodule NervesTestClient.Application do
   use Application
 
   def start(_type, _args) do
+    config = NervesHubLink.Configurator.build()
 
-    nerves_hub_socket_opts = nerves_hub_socket_opts()
+    url = Application.fetch_env!(:nerves_test_client, :url)
 
-    test_server_socket_opts =
-    nerves_hub_socket_opts
-    |> NervesHub.Socket.opts()
-    |> Keyword.merge(Application.get_env(:nerves_test_client, :socket))
+    config =
+      config
+      |> Map.put(:socket, Keyword.merge(config.socket, :url, url))
+      |> Map.put(:params, Map.merge(config.params, %{
+        "tag" => Application.get_env(:nerves_test_client, :tag),
+        "serial" => serial(),
+        "test_path" => Application.get_env(:nerves_test_client, :test_path)
+      }))
 
     children = [
-      {PhoenixClient.Socket, {test_server_socket_opts, name: NervesTestClient.Socket}},
-      {NervesHub.Supervisor, nerves_hub_socket_opts},
-      NervesTestClient.Runner
+      {NervesTestClient.Runner, config}
     ]
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: NervesTestClient.Supervisor]
-    Supervisor.start_link(children, opts)
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: NervesTestClient.Supervisor)
   end
 
-  defp nerves_hub_socket_opts() do
-    {:ok, engine} = NervesKey.PKCS11.load_engine()
-    {:ok, i2c} = ATECC508A.Transport.I2C.init([])
-    if NervesKey.detected?(i2c) and NervesKey.has_aux_certificates?(i2c) do
-      cert =
-      NervesKey.device_cert(i2c, :aux)
-      |> X509.Certificate.to_der()
+  defp serial do
+    case System.cmd("boardid", []) do
+      {out, 0} -> String.trim(out)
+      {_, _} -> hostname()
+    end
+  end
 
-      signer_cert =
-        NervesKey.signer_cert(i2c, :aux)
-        |> X509.Certificate.to_der()
-
-      key = NervesKey.PKCS11.private_key(engine, i2c: 1)
-      cacerts = [signer_cert | NervesHub.Certificate.ca_certs()]
-
-      [key: key, cert: cert, cacerts: cacerts]
-    else
-      []
+  defp hostname do
+    case System.cmd("hostname", []) do
+      {out, 0} -> String.trim(out)
+      {_, _} -> "dev"
     end
   end
 end

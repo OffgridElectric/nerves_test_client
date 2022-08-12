@@ -23,10 +23,9 @@ defmodule NervesTestClient.MixProject do
   defp deps do
     [
       {:ex_unit_release, "~> 0.1"},
-      {:phoenix_client, "~> 0.7"},
-      {:websocket_client, "~> 1.3"},
       {:jason, "~> 1.0"},
-      {:nerves_hub_link, "~> 0.11"},
+      {:nerves_hub_link, "~> 1.2"},
+      {:slipstream, "~> 1.0"},
       {:vintage_net, "~> 0.12"}
     ]
   end
