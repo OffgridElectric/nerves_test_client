@@ -15,7 +15,7 @@ defmodule NervesTestClient.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {NervesTestClient.Application, []}
+      # mod: {NervesTestClient.Application, []}
     ]
   end
 
@@ -24,7 +24,7 @@ defmodule NervesTestClient.MixProject do
     [
       {:ex_unit_release, github: "OffgridElectric/ex_unit_release"},
       {:jason, "~> 1.0"},
-      {:nerves_hub_link, "~> 1.2"},
+      # {:nerves_hub_link, "~> 1.2"},
       {:slipstream, "~> 1.0"},
       {:nerves_pack, "~> 0.7"}
     ]

@@ -42,7 +42,7 @@ defmodule NervesTestClient.Runner do
 
   @impl Slipstream
   def handle_join("device:" <> _ = topic, _reply, %{assigns: %{topic: topic}} = socket) do
-    Logger.info("Joined #{topic}")
+    Logger.info("Joined #{inspect topic}")
     push!(socket, topic, "test_begin", [])
     test_pid = spawn_test(socket.assigns.params["test_path"])
     socket = assign(socket, :test_pid, test_pid)
@@ -70,6 +70,12 @@ defmodule NervesTestClient.Runner do
     })
 
     {:ok, socket}
+  end
+
+  @impl Slipstream
+  def handle_topic_close(topic, reason, %{assigns: %{topic: topic}} = socket) do
+    Logger.error("topic closed: #{inspect reason}")
+    rejoin(socket, topic)
   end
 
   ###
