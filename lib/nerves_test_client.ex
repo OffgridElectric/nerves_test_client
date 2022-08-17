@@ -17,7 +17,7 @@ defmodule NervesTestClient do
   end
 
   defp serial do
-    case System.cmd("boardid", []) do
+    case System.cmd("boardid", ["-b", "nerves_key", "-f", "/dev/i2c-1"]) do
       {out, 0} -> String.trim(out)
       {_, _} -> hostname()
     end
