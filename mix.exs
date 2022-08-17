@@ -22,7 +22,7 @@ defmodule NervesTestClient.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_unit_release, "~> 0.1"},
+      {:ex_unit_release, github: "OffgridElectric/ex_unit_release"},
       {:jason, "~> 1.0"},
       {:nerves_hub_link, "~> 1.2"},
       {:slipstream, "~> 1.0"},

@@ -4,7 +4,7 @@
   "certifi": {:hex, :certifi, "2.9.0", "6f2a475689dd47f19fb74334859d460a2dc4e3252a3324bd2111b8f0429e7e21", [:rebar3], [], "hexpm", "266da46bdb06d6c6d35fde799bcb28d36d985d424ad7c08b5bb48f5b5cdd4641"},
   "circular_buffer": {:hex, :circular_buffer, "0.4.1", "477f370fd8cfe1787b0a1bade6208bbd274b34f1610e41f1180ba756a7679839", [:mix], [], "hexpm", "633ef2e059dde0d7b89bbab13b1da9d04c6685e80e68fbdf41282d4fae746b72"},
   "elixir_make": {:hex, :elixir_make, "0.6.3", "bc07d53221216838d79e03a8019d0839786703129599e9619f4ab74c8c096eac", [:mix], [], "hexpm", "f5cbd651c5678bcaabdbb7857658ee106b12509cd976c2c2fca99688e1daf716"},
-  "ex_unit_release": {:hex, :ex_unit_release, "0.1.0", "c7d180f82965dc1fd6a5f72359c813407bf4902af251914884781f5847cfdedb", [:mix], [], "hexpm", "212a88aff126196b61bef7d6b32b1c9495a00ddab727c72b7d7f5025034b4454"},
+  "ex_unit_release": {:git, "https://github.com/OffgridElectric/ex_unit_release.git", "9d34496a22a2853b3faa78ad5db9400b53456985", []},
   "extty": {:hex, :extty, "0.2.1", "4da6d78d41f0a9ff9980d82968476b4277ac0afa227d2ed91af0ffcbac2f451b", [:mix], [], "hexpm", "26b2e495c14501d4ae24c7dffba199f6abf0a0f69dcfd07db62f421952442f05"},
   "fwup": {:hex, :fwup, "1.1.0", "6c9d5f06a38263855dcf34f5a5b4da46c2ca42f6e3f873b8f932d095ce010765", [:mix], [], "hexpm", "3ff61d932a42785efc3324ecab6cf9bd3de75dacfca16d9e659a7173ef9f15d6"},
   "gen_state_machine": {:hex, :gen_state_machine, "3.0.0", "1e57f86a494e5c6b14137ebef26a7eb342b3b0070c7135f2d6768ed3f6b6cdff", [:mix], [], "hexpm", "0a59652574bebceb7309f6b749d2a41b45fdeda8dbb4da0791e355dd19f0ed15"},
