@@ -19,19 +19,20 @@ defmodule NervesTestClient.Runner do
 
     socket =
       new_socket()
-      |> assign(params: config.params)
+      |> assign(
+        params: config.params,
+        topic: "device:" <> config.params["serial"]
+      )
       |> connect!(opts)
 
     {:ok, socket}
   end
 
   @impl Slipstream
-  def handle_connect(socket) do
-    params = socket.assigns.params
-
+  def handle_connect(%{assigns: %{params: params, topic: topic}} = socket) do
     socket =
       socket
-      |> join("device:" <> params["serial"], %{
+      |> join(topic, %{
         system: params["nerves_fw_platform"],
         status: "ready"
       })
@@ -40,7 +41,8 @@ defmodule NervesTestClient.Runner do
   end
 
   @impl Slipstream
-  def handle_join("device:" <> _ = topic, _reply, socket) do
+  def handle_join("device:" <> _ = topic, _reply, %{assigns: %{topic: topic}} = socket) do
+    Logger.info("Joined #{topic}")
     push!(socket, topic, "test_begin", [])
     test_pid = spawn_test(socket.assigns.params["test_path"])
     socket = assign(socket, :test_pid, test_pid)
@@ -59,10 +61,9 @@ defmodule NervesTestClient.Runner do
 
   def handle_info(
         {:test_result, test_pid, {:ok, {test_io, test_result}}},
-        %{assigns: %{test_pid: test_pid}} = socket
+        %{assigns: %{topic: topic, test_pid: test_pid}} = socket
       ) do
-    topic = "device:" <> socket.assigns.params["serial"]
-
+    Logger.info("Received test results")
     push!(socket, topic, "test_result", %{
       "test_results" => test_result,
       "test_io" => test_io
