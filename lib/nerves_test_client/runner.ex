@@ -49,13 +49,20 @@ defmodule NervesTestClient.Runner do
   end
 
   @impl Slipstream
-  def handle_info({:test_result, test_pid, {:error, reason}}, %{assigns: %{test_pid: test_pid}} = socket) do
-    Logger.error("Error running tests: #{inspect reason}")
+  def handle_info(
+        {:test_result, test_pid, {:error, reason}},
+        %{assigns: %{test_pid: test_pid}} = socket
+      ) do
+    Logger.error("Error running tests: #{inspect(reason)}")
     {:ok, socket}
   end
 
-  def handle_info({:test_result, test_pid, {:ok, test_io, test_result}}, %{assigns: %{test_pid: test_pid}} = socket) do
+  def handle_info(
+        {:test_result, test_pid, {:ok, {test_io, test_result}}},
+        %{assigns: %{test_pid: test_pid}} = socket
+      ) do
     topic = "device:" <> socket.assigns.params["serial"]
+
     push!(socket, topic, "test_result", %{
       "test_results" => test_result,
       "test_io" => test_io
@@ -68,7 +75,7 @@ defmodule NervesTestClient.Runner do
   ### Priv
   ###
   defp spawn_test(path) do
-     caller = self()
+    caller = self()
 
     spawn_link(fn ->
       ret = ExUnitRelease.run(path: path)
